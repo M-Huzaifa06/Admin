@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createItem, getItems } from './api'
+import { createItem, deleteItem, getItems } from './api'
 import './App.css'
 
 const tabs = [
@@ -22,6 +22,7 @@ function App() {
   const [formState, setFormState] = useState(initialForms)
   const [status, setStatus] = useState({ message: '', type: '' })
   const [loading, setLoading] = useState(false)
+  const [deletingId, setDeletingId] = useState('')
 
   useEffect(() => {
     fetchData()
@@ -91,6 +92,40 @@ function App() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleDelete(section, item) {
+    const label = item.name || 'this item'
+    const confirmed = window.confirm(`Delete ${label}? This cannot be undone.`)
+    if (!confirmed) return
+
+    setDeletingId(item._id)
+    setStatus({ message: '', type: '' })
+
+    try {
+      await deleteItem(`${section}/${item._id}`)
+      await fetchData()
+      setStatus({ message: `${label} deleted successfully`, type: 'success' })
+    } catch (error) {
+      setStatus({ message: error.message || 'Error deleting item', type: 'error' })
+    } finally {
+      setDeletingId('')
+    }
+  }
+
+  function DeleteButton({ section, item }) {
+    const isDeleting = deletingId === item._id
+
+    return (
+      <button
+        type="button"
+        className="button-danger"
+        disabled={loading || isDeleting}
+        onClick={() => handleDelete(section, item)}
+      >
+        {isDeleting ? 'Deleting...' : 'Delete'}
+      </button>
+    )
   }
 
   function renderForm() {
@@ -240,6 +275,7 @@ function App() {
                 <th className="px-4 py-3">Duration</th>
                 <th className="px-4 py-3">Gender</th>
                 <th className="px-4 py-3">Active</th>
+                <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -250,6 +286,9 @@ function App() {
                   <td className="px-4 py-3">{item.duration} min</td>
                   <td className="px-4 py-3 capitalize">{item.gender}</td>
                   <td className="px-4 py-3">{item.isActive ? 'Yes' : 'No'}</td>
+                  <td className="px-4 py-3 text-right">
+                    <DeleteButton section="services" item={item} />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -269,6 +308,7 @@ function App() {
                 <th className="px-4 py-3">Address</th>
                 <th className="px-4 py-3">Phone</th>
                 <th className="px-4 py-3">Hours</th>
+                <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -279,6 +319,9 @@ function App() {
                   <td className="px-4 py-3">{item.address || '—'}</td>
                   <td className="px-4 py-3">{item.phone || '—'}</td>
                   <td className="px-4 py-3">{item.hours || '—'}</td>
+                  <td className="px-4 py-3 text-right">
+                    <DeleteButton section="branches" item={item} />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -297,6 +340,7 @@ function App() {
                 <th className="px-4 py-3">Role</th>
                 <th className="px-4 py-3">Branch</th>
                 <th className="px-4 py-3">Experience</th>
+                <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -306,6 +350,9 @@ function App() {
                   <td className="px-4 py-3">{item.role || '—'}</td>
                   <td className="px-4 py-3">{item.branchId?.name || '—'}</td>
                   <td className="px-4 py-3">{item.experience || '—'}</td>
+                  <td className="px-4 py-3 text-right">
+                    <DeleteButton section="barbers" item={item} />
+                  </td>
                 </tr>
               ))}
             </tbody>
