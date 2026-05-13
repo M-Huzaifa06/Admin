@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { createItem, deleteItem, getItems } from './api'
+import { createItem, deleteItem, getItems, patchItem } from './api'
 import './App.css'
 
 const tabs = [
+  { id: 'appointments', label: 'Appointments' },
   { id: 'services', label: 'Services' },
   { id: 'branches', label: 'Branches' },
   { id: 'barbers', label: 'Barber Staff' },
@@ -15,14 +16,17 @@ const initialForms = {
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState('services')
+  const [activeTab, setActiveTab] = useState('appointments')
   const [services, setServices] = useState([])
   const [branches, setBranches] = useState([])
   const [barbers, setBarbers] = useState([])
+  const [bookings, setBookings] = useState([])
   const [formState, setFormState] = useState(initialForms)
   const [status, setStatus] = useState({ message: '', type: '' })
   const [loading, setLoading] = useState(false)
   const [deletingId, setDeletingId] = useState('')
+  const [updatingId, setUpdatingId] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
 
   useEffect(() => {
     fetchData()
@@ -31,14 +35,16 @@ function App() {
   async function fetchData() {
     setLoading(true)
     try {
-      const [serviceData, branchData, barberData] = await Promise.all([
+      const [serviceData, branchData, barberData, bookingData] = await Promise.all([
         getItems('services'),
         getItems('branches'),
         getItems('barbers'),
+        getItems('bookings'),
       ])
       setServices(serviceData)
       setBranches(branchData)
       setBarbers(barberData)
+      setBookings(bookingData)
     } catch (error) {
       setStatus({ message: error.message || 'Unable to load data', type: 'error' })
     } finally {
@@ -126,6 +132,36 @@ function App() {
         {isDeleting ? 'Deleting...' : 'Delete'}
       </button>
     )
+  }
+
+  async function handleStatusUpdate(bookingId, newStatus) {
+    setUpdatingId(bookingId)
+    setStatus({ message: '', type: '' })
+    try {
+      await patchItem(`bookings/${bookingId}/status`, { status: newStatus })
+      await fetchData()
+      setStatus({ message: `Appointment ${newStatus} successfully`, type: 'success' })
+    } catch (error) {
+      setStatus({ message: error.message || 'Error updating status', type: 'error' })
+    } finally {
+      setUpdatingId('')
+    }
+  }
+
+  function getStatusBadge(s) {
+    const map = {
+      pending: 'badge-pending',
+      confirmed: 'badge-confirmed',
+      cancelled: 'badge-cancelled',
+      completed: 'badge-completed',
+    }
+    return map[s] || ''
+  }
+
+  function getFilteredBookings() {
+    const sorted = [...bookings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    if (statusFilter === 'all') return sorted
+    return sorted.filter((b) => b.status === statusFilter)
   }
 
   function renderForm() {
@@ -261,6 +297,121 @@ function App() {
     }
 
     return null
+  }
+
+  function renderAppointments() {
+    const filtered = getFilteredBookings()
+    const counts = {
+      all: bookings.length,
+      pending: bookings.filter((b) => b.status === 'pending').length,
+      confirmed: bookings.filter((b) => b.status === 'confirmed').length,
+      completed: bookings.filter((b) => b.status === 'completed').length,
+      cancelled: bookings.filter((b) => b.status === 'cancelled').length,
+    }
+
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-wrap gap-2">
+          {['all', 'pending', 'confirmed', 'completed', 'cancelled'].map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setStatusFilter(f)}
+              className={`filter-btn ${statusFilter === f ? 'filter-btn-active' : ''}`}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+              <span className="filter-count">{counts[f]}</span>
+            </button>
+          ))}
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500">
+            No {statusFilter === 'all' ? '' : statusFilter} appointments found.
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {filtered.map((booking) => {
+              const isUpdating = updatingId === booking._id
+              return (
+                <div key={booking._id} className={`appointment-card appointment-card-${booking.status}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900">{booking.customer?.name}</h3>
+                      <p className="text-sm text-slate-500">{booking.customer?.email}</p>
+                      <p className="text-sm text-slate-500">{booking.customer?.phone}</p>
+                    </div>
+                    <span className={`badge ${getStatusBadge(booking.status)}`}>
+                      {booking.status}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 space-y-2 text-sm text-slate-700">
+                    <div className="flex items-center gap-2">
+                      <span className="icon-text">📅</span>
+                      <span className="font-medium">{booking.date}</span>
+                      <span className="text-slate-400">|</span>
+                      <span>{booking.startTime} – {booking.endTime}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="icon-text">💇</span>
+                      <span>{booking.barber?.name || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="icon-text">🏪</span>
+                      <span>{booking.branch?.name || 'N/A'}{booking.branch?.city ? ` — ${booking.branch.city}` : ''}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="icon-text">✂️</span>
+                      <span>{booking.services?.map((s) => s.name).join(', ') || 'N/A'}</span>
+                    </div>
+                    {booking.totalPrice != null && (
+                      <div className="flex items-center gap-2">
+                        <span className="icon-text">💰</span>
+                        <span className="font-semibold text-emerald-700">${booking.totalPrice}</span>
+                        <span className="text-slate-400">({booking.totalDuration} min)</span>
+                      </div>
+                    )}
+                    {booking.notes && (
+                      <div className="flex items-start gap-2">
+                        <span className="icon-text">📝</span>
+                        <span className="italic text-slate-500">{booking.notes}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-200 pt-3">
+                    {booking.status === 'pending' && (
+                      <>
+                        <button className="button-accept" disabled={isUpdating} onClick={() => handleStatusUpdate(booking._id, 'confirmed')}>
+                          {isUpdating ? '...' : '✓ Accept'}
+                        </button>
+                        <button className="button-reject" disabled={isUpdating} onClick={() => handleStatusUpdate(booking._id, 'cancelled')}>
+                          {isUpdating ? '...' : '✗ Reject'}
+                        </button>
+                      </>
+                    )}
+                    {booking.status === 'confirmed' && (
+                      <>
+                        <button className="button-complete" disabled={isUpdating} onClick={() => handleStatusUpdate(booking._id, 'completed')}>
+                          {isUpdating ? '...' : '✓ Complete'}
+                        </button>
+                        <button className="button-reject" disabled={isUpdating} onClick={() => handleStatusUpdate(booking._id, 'cancelled')}>
+                          {isUpdating ? '...' : '✗ Cancel'}
+                        </button>
+                      </>
+                    )}
+                    {(booking.status === 'cancelled' || booking.status === 'completed') && (
+                      <span className="text-xs text-slate-400 italic">No actions available</span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
   }
 
   function renderTable() {
@@ -399,23 +550,36 @@ function App() {
             </div>
           )}
 
-          <div className="mt-6 grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
-              <h2 className="text-xl font-semibold">Add {tabs.find((tab) => tab.id === activeTab).label}</h2>
-              <p className="mt-2 text-sm text-slate-600">Use this form to create new items in the database.</p>
-              <div className="mt-6">{renderForm()}</div>
-            </div>
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+          {activeTab === 'appointments' ? (
+            <div className="mt-6">
               <div className="mb-4 flex items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold">Existing {tabs.find((tab) => tab.id === activeTab).label}</h2>
-                  <p className="text-sm text-slate-600">Loaded from the backend.</p>
+                  <h2 className="text-xl font-semibold">Booking Appointments</h2>
+                  <p className="text-sm text-slate-600">Manage appointments booked from the frontend.</p>
                 </div>
                 {loading && <span className="rounded-full bg-slate-200 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-700">Loading</span>}
               </div>
-              {renderTable()}
+              {renderAppointments()}
             </div>
-          </div>
+          ) : (
+            <div className="mt-6 grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+                <h2 className="text-xl font-semibold">Add {tabs.find((tab) => tab.id === activeTab).label}</h2>
+                <p className="mt-2 text-sm text-slate-600">Use this form to create new items in the database.</p>
+                <div className="mt-6">{renderForm()}</div>
+              </div>
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+                <div className="mb-4 flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl font-semibold">Existing {tabs.find((tab) => tab.id === activeTab).label}</h2>
+                    <p className="text-sm text-slate-600">Loaded from the backend.</p>
+                  </div>
+                  {loading && <span className="rounded-full bg-slate-200 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-700">Loading</span>}
+                </div>
+                {renderTable()}
+              </div>
+            </div>
+          )}
         </section>
       </div>
     </div>

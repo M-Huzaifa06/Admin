@@ -81,3 +81,143 @@ select {
   opacity: 0.7;
   cursor: not-allowed;
 }
+
+/* ── Appointment Cards ── */
+.appointment-card {
+  border-radius: 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #94a3b8;
+  background: white;
+  padding: 1.25rem;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.appointment-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.appointment-card-pending { border-left-color: #f59e0b; }
+.appointment-card-confirmed { border-left-color: #10b981; }
+.appointment-card-completed { border-left-color: #6366f1; }
+.appointment-card-cancelled { border-left-color: #ef4444; }
+
+/* ── Status Badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.badge-pending { background: #fef3c7; color: #92400e; }
+.badge-confirmed { background: #d1fae5; color: #065f46; }
+.badge-completed { background: #e0e7ff; color: #3730a3; }
+.badge-cancelled { background: #fee2e2; color: #991b1b; }
+
+/* ── Filter Buttons ── */
+.filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: white;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover { border-color: #94a3b8; background: #f8fafc; }
+
+.filter-btn-active {
+  background: #0f172a;
+  color: white;
+  border-color: #0f172a;
+}
+
+.filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.08);
+  color: inherit;
+}
+
+.filter-btn-active .filter-count {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Action Buttons ── */
+.button-accept {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  border: 1px solid #a7f3d0;
+  padding: 0.5rem 1rem;
+  background: #ecfdf5;
+  color: #065f46;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button-accept:hover:not(:disabled) { background: #d1fae5; border-color: #6ee7b7; }
+.button-accept:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.button-reject {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  border: 1px solid #fecdd3;
+  padding: 0.5rem 1rem;
+  background: #fff1f2;
+  color: #be123c;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button-reject:hover:not(:disabled) { background: #ffe4e6; border-color: #fb7185; }
+.button-reject:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.button-complete {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  border: 1px solid #c7d2fe;
+  padding: 0.5rem 1rem;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button-complete:hover:not(:disabled) { background: #e0e7ff; border-color: #a5b4fc; }
+.button-complete:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.icon-text {
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}

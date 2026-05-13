@@ -63,6 +63,13 @@ export async function updateItem(path, body) {
   });
 }
 
+export async function patchItem(path, body) {
+  return request(path, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
+}
+
 export async function deleteItem(path) {
   return request(path, {
     method: 'DELETE',
