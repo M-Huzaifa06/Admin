@@ -221,7 +221,7 @@ function App() {
               <input value={data.phone} onChange={(e) => handleInputChange('branches', 'phone', e.target.value)} className="input" />
             </label>
             <label className="block">
-              <span className="label">Hours</span>
+              <span className="label">Days & Hours</span>
               <input value={data.hours} onChange={(e) => handleInputChange('branches', 'hours', e.target.value)} className="input" />
             </label>
             <label className="block md:col-span-2">
@@ -523,9 +523,7 @@ function App() {
             <div>
               <p className="text-sm uppercase tracking-[0.18em] text-slate-400">Admin Panel</p>
               <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Barber Shop Management</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-                Add services, branches, and barber staff directly to MongoDB Atlas.
-              </p>
+
             </div>
           </div>
         </header>
@@ -555,7 +553,6 @@ function App() {
               <div className="mb-4 flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-semibold">Booking Appointments</h2>
-                  <p className="text-sm text-slate-600">Manage appointments booked from the frontend.</p>
                 </div>
                 {loading && <span className="rounded-full bg-slate-200 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-700">Loading</span>}
               </div>
@@ -565,14 +562,12 @@ function App() {
             <div className="mt-6 grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
                 <h2 className="text-xl font-semibold">Add {tabs.find((tab) => tab.id === activeTab).label}</h2>
-                <p className="mt-2 text-sm text-slate-600">Use this form to create new items in the database.</p>
                 <div className="mt-6">{renderForm()}</div>
               </div>
               <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
                 <div className="mb-4 flex items-center justify-between gap-4">
                   <div>
                     <h2 className="text-xl font-semibold">Existing {tabs.find((tab) => tab.id === activeTab).label}</h2>
-                    <p className="text-sm text-slate-600">Loaded from the backend.</p>
                   </div>
                   {loading && <span className="rounded-full bg-slate-200 px-3 py-1 text-xs uppercase tracking-[0.18em] text-slate-700">Loading</span>}
                 </div>
